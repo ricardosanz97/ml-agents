@@ -28,29 +28,53 @@ public class CuboXAgent : Agent {
 
     public override void AgentAction(float[] vectorAction, string textAction)
     {
-        if (brain.brainParameters.vectorActionSpaceType == SpaceType.continuous){
+        float initialDistanceToObjective = Vector3.Distance(objective.transform.localPosition, this.transform.localPosition);
+        float horizontal = 0, vertical = 0;
 
-            float initialDistanceToObjective = Vector3.Distance(objective.transform.localPosition, this.transform.localPosition);
+        if (brain.brainParameters.vectorActionSpaceType == SpaceType.continuous)
+        {
 
-            float newX = transform.localPosition.x + (vectorAction[0] * speed * Time.deltaTime);
-            newX = Mathf.Clamp(newX, -7.3f, 7.3f);
-            //transform.localPosition = new Vector3(newX, 0, 0);
+            horizontal = Mathf.RoundToInt(Mathf.Clamp(vectorAction[0], -1, 1));
+            vertical = Mathf.RoundToInt(Mathf.Clamp(vectorAction[1], -1, 1));
 
-            float newZ = transform.localPosition.z + (vectorAction[1] * speed * Time.deltaTime);
-            newZ = Mathf.Clamp(newZ, -7.3f, 7.3f);
-            transform.localPosition = new Vector3(newX, 0, newZ);
-
-            float finalDistanceToObjective = Vector3.Distance(objective.transform.localPosition, this.transform.localPosition);
-
-            if (finalDistanceToObjective < initialDistanceToObjective){
-                //going to the player, good job.
-                AddReward(0.1f);
-            }
-            else{
-                //not going to the player, bad job. 
-                AddReward(-0.3f);
+        }
+        else if (brain.brainParameters.vectorActionSpaceType == SpaceType.discrete){
+            switch ((int)vectorAction[0]){
+                case 0:
+                    horizontal = 1;
+                    break;
+                case 1:
+                    horizontal = -1;
+                    break;
+                case 2:
+                    vertical = 1;
+                    break;
+                case 3:
+                    vertical = -1;
+                    break;
             }
         }
+
+        float newX = transform.localPosition.x + (horizontal * speed * Time.deltaTime);
+        newX = Mathf.Clamp(newX, -7.3f, 7.3f);
+        //transform.localPosition = new Vector3(newX, 0, 0);
+
+        float newZ = transform.localPosition.z + (vertical * speed * Time.deltaTime);
+        newZ = Mathf.Clamp(newZ, -7.3f, 7.3f);
+        transform.localPosition = new Vector3(newX, 0, newZ);
+
+        float finalDistanceToObjective = Vector3.Distance(objective.transform.localPosition, this.transform.localPosition);
+
+        if (finalDistanceToObjective < initialDistanceToObjective){
+            //going to the player, good job.
+            AddReward(0.1f);
+        }
+        else{
+            //not going to the player, bad job. 
+            AddReward(-0.3f);
+        }
+        
+
     }
 
     private void OnTriggerEnter(Collider other)
