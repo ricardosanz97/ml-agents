@@ -13,9 +13,11 @@ public class CuboXAgent : Agent {
         gameObject.transform.localPosition = Vector3.zero;
 
         //ramdomly set objective position between a range
-        objective.transform.localPosition = new Vector3(Random.Range(-7f, 7f)
-                                                        * (Random.value <= .5f ? 1 : -1), 0, Random.Range(-7f, 7f));
+        objective.transform.localPosition = GetObjectivePosition(CuboXAcademy.offset);
+    }
 
+    private Vector3 GetObjectivePosition(float offset){
+        return new Vector3(Random.Range(1.05f, offset) * (Random.value <= .5f ? 1 : -1), 0, Random.Range(1.05f, offset * (Random.value <= .5f ? 1: -1)));
     }
 
     public override void CollectObservations()
@@ -28,7 +30,7 @@ public class CuboXAgent : Agent {
 
     public override void AgentAction(float[] vectorAction, string textAction)
     {
-        float initialDistanceToObjective = Vector3.Distance(objective.transform.localPosition, this.transform.localPosition);
+        //float initialDistanceToObjective = Vector3.Distance(objective.transform.localPosition, this.transform.localPosition);
         float horizontal = 0, vertical = 0;
 
         if (brain.brainParameters.vectorActionSpaceType == SpaceType.continuous)
@@ -63,6 +65,7 @@ public class CuboXAgent : Agent {
         newZ = Mathf.Clamp(newZ, -7.3f, 7.3f);
         transform.localPosition = new Vector3(newX, 0, newZ);
 
+        /*
         float finalDistanceToObjective = Vector3.Distance(objective.transform.localPosition, this.transform.localPosition);
 
         if (finalDistanceToObjective < initialDistanceToObjective){
@@ -73,7 +76,7 @@ public class CuboXAgent : Agent {
             //not going to the player, bad job. 
             AddReward(-0.3f);
         }
-        
+        */
 
     }
 

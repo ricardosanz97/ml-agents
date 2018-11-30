@@ -4,5 +4,11 @@ using UnityEngine;
 
 public class CuboXAcademy : Academy {
 
-	
+    public static float offset;
+
+    public override void AcademyReset()
+    {
+        offset = resetParameters["offset"];
+    }
 }
+
