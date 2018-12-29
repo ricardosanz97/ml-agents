@@ -23,6 +23,7 @@ TagManager:
   - block
   - orangeGoal
   - Objective
+  - spikes
   layers:
   - Default
   - TransparentFX

@@ -1,0 +1,10 @@
+{
+    "measure" : "reward",
+    "thresholds" : [26, 26, 26, 25, 24, 23],
+    "min_lesson_length" : 1,
+    "signal_smoothing" : true,
+    "parameters" :
+    {
+        "max_offset" : [0.21, 0.5, 1, 3, 6.5, 10, 13.5]
+    }
+}

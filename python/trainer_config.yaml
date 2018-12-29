@@ -18,6 +18,18 @@ default:
     summary_freq: 1000
     use_recurrent: false
 
+RunBrain:
+    max_steps: 5.0e6
+    batch_size: 128
+    buffer_size: 2048
+    hidden_units: 256
+
+PushBrain:
+    max_steps: 5.0e6
+    batch_size: 128
+    buffer_size: 2048
+    hidden_units: 256
+
 CuboXBrain:
     max_steps: 5.0e6
 

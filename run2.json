@@ -1,0 +1,12 @@
+{
+    "measure" : "reward",
+    "thresholds" : [60,60,20,20],
+    "min_lesson_length" : 1,
+    "signal_smoothing" : true,
+    "parameters" :
+    {
+        "objectiveOffset" : [10,22.5,35,45,50],
+        "pitOffset" : [10,13,21.5,21.5,21.5],
+        "spikesOffset" : [-50,-50,-50,12,12]
+    }
+}
