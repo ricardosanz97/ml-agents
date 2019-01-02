@@ -24,6 +24,8 @@ TagManager:
   - orangeGoal
   - Objective
   - spikes
+  - walkableSurface
+  - goodJob
   layers:
   - Default
   - TransparentFX

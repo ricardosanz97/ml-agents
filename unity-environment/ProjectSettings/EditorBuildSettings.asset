@@ -14,10 +14,13 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/ML-Agents/Examples/Push/Push.unity
     guid: 7340fc02306c2445a955de1c7c278d2f
-  - enabled: 1
+  - enabled: 0
     path: Assets/ML-Agents/Examples/Run/Run.unity
     guid: e1e090730f57f4d4cb39c25d88d40c21
   - enabled: 0
     path: Assets/ML-Agents/Examples/Run2/Run2.unity
     guid: 60e1737483f8745248e2f721d1275b92
+  - enabled: 1
+    path: Assets/ML-Agents/Examples/Run3/Run3.unity
+    guid: b5e2172675f1f4417a7dd90d6fd14ee3
   m_configObjects: {}
