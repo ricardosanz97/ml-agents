@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using System.Linq;
 
 public class RunAgent : Agent {
 
@@ -9,13 +10,16 @@ public class RunAgent : Agent {
     public GameObject objective;
     public GameObject spikes;
     public GameObject pit;
+    public Transform rayStart;
 
+    public int nextObstacle;
     public float jumpForce = 20f;
     public bool grounded = false;
     public bool crouched = false;
 
     public UnityEvent goodJob;
     public UnityEvent badJob;
+    public List<Collider> defListColliders;
 
     private Rigidbody rb;
     //private BoxCollider bc;
@@ -29,6 +33,7 @@ public class RunAgent : Agent {
 
     public override void AgentReset()
     {
+
         Vector3 spikesPos = new Vector3(0f, 2.68f, -1000f);
         Vector3 pitPos = new Vector3(0f, -0.99f, -1000f);
         Vector3 objPos = new Vector3(0f, -0.99f, -1000f);
@@ -47,7 +52,7 @@ public class RunAgent : Agent {
                 pitPos = GetPitPosition(RunAcademy.pitOffset);
                 objPos = GetObjectivePosition(RunAcademy.objectiveOffset);
             }
-            while (Mathf.Abs(pitPos.z - objPos.z) < 3.5f
+            while (Mathf.Abs(pitPos.z - objPos.z) < 6.5f
             || objPos.z < pitPos.z);
 
         }
@@ -58,7 +63,7 @@ public class RunAgent : Agent {
                 spikesPos = GetSpikesPosition(RunAcademy.spikesOffset);
                 objPos = GetObjectivePosition(RunAcademy.objectiveOffset);
             }
-            while (Mathf.Abs(spikesPos.z - objPos.z) < 5f
+            while (Mathf.Abs(spikesPos.z - objPos.z) < 10f
             || objPos.z < spikesPos.z);
         }
         else
@@ -69,9 +74,9 @@ public class RunAgent : Agent {
                 spikesPos = GetSpikesPosition(RunAcademy.spikesOffset);
                 objPos = GetObjectivePosition(RunAcademy.objectiveOffset);
             }
-            while (Mathf.Abs(pitPos.z - objPos.z) < 3.5f
-            || Mathf.Abs(spikesPos.z - objPos.z) < 5f
-            || Mathf.Abs(pitPos.z - spikesPos.z) < 3.5f + 3f
+            while (Mathf.Abs(pitPos.z - objPos.z) < 6.5f
+            || Mathf.Abs(spikesPos.z - objPos.z) < 10f
+            || Mathf.Abs(pitPos.z - spikesPos.z) < 7.5f
             || objPos.z < spikesPos.z
             || objPos.z < pitPos.z);
         }
@@ -117,36 +122,57 @@ public class RunAgent : Agent {
     */
     public override void CollectObservations()
     {
-        Vector3 pitPos = pit.transform.localPosition;
-        Vector3 spikesPos = spikes.transform.localPosition;
         Vector3 objectivePos = objective.transform.localPosition;
 
         float distObjective = objective.transform.localPosition.z - transform.localPosition.z;
         float distSpikes = spikes.transform.localPosition.z - transform.localPosition.z;
         float distPit = pit.transform.localPosition.z - transform.localPosition.z;
 
+        //DISTANCE TO OBJECTIVE AND POSITION
         AddVectorObs(distObjective);
         AddVectorObs(objectivePos);
-          
+         
+        //NEXT OBJECT
+        //pit = 1
+        //spikes = 0
+        //nada = -1
+        if (RunAcademy.spikesOffset > 0 && RunAcademy.pitOffset > 0)
+        {
+            AddVectorObs(distSpikes > distPit ? 1 : 0); //hay pit y spikes, devolvemos el mas cercano
+            nextObstacle = distSpikes > distPit ? 1 : 0;
+        }
+        else if (RunAcademy.spikesOffset > 0)
+        {
+            AddVectorObs(0); //spikes mas cerca
+            nextObstacle = 0;
+        }
+        else if (RunAcademy.pitOffset > 0)
+        {
+            AddVectorObs(1); //pit mas cerca
+            nextObstacle = 1;
+        }
+        else
+        {
+            AddVectorObs(-1); //no hay ni pit ni spikes
+            nextObstacle = -1;
+        }
+
+        //DISTANCIAS
         if (RunAcademy.spikesOffset > 0) //si hay algun pincho
         {
             AddVectorObs(distSpikes);
-            AddVectorObs(spikesPos);
         }
         else
         {
             AddVectorObs(0);
-            AddVectorObs(Vector3.zero);
         }
         if (RunAcademy.pitOffset > 0) //si hay algun foso
         {
             AddVectorObs(distPit);
-            AddVectorObs(pitPos);
         }
         else
         {
             AddVectorObs(0);
-            AddVectorObs(Vector3.zero);
         }
         AddVectorObs(transform.localPosition.y);
         AddVectorObs(grounded ? 1f : 0f);
@@ -155,7 +181,7 @@ public class RunAgent : Agent {
 
     public override void AgentAction(float[] vectorAction, string textAction)
     {
-        AddReward(-0.0005f);
+        //AddReward(-0.0005f);
 
         if (brain.brainParameters.vectorActionSpaceType == SpaceType.discrete)
         {
@@ -170,17 +196,11 @@ public class RunAgent : Agent {
             }
             if ((int)vectorAction[0] == 2)
             {
-                if (!crouched && !grounded) Crouch();
+                if (!crouched && grounded) Crouch();
             }
             if ((int)vectorAction[0] == 3)
             {
                 if (crouched && grounded) LiftUp();
-            }
-            float secondDistance = Mathf.Abs(transform.localPosition.z - objective.transform.localPosition.z);
-
-            if (Mathf.RoundToInt(secondDistance) < Mathf.RoundToInt(firstDistance))
-            {
-                AddReward(0.001f);
             }
         }
     }
@@ -188,6 +208,7 @@ public class RunAgent : Agent {
     private void Move()
     {
         rb.MovePosition(rb.position + (Vector3.forward * RunAcademy.speed * Time.fixedDeltaTime));
+        AddReward(0.075f);
     }
 
     private void Jump()
@@ -207,8 +228,9 @@ public class RunAgent : Agent {
     {
         Debug.Log("lifting up!");
         crouched = false;
-        transform.localScale = new Vector3(transform.localScale.x, Mathf.Clamp(transform.localScale.y * 2, transform.localScale.y / 2, transform.localScale.y *2), transform.localScale.z);
         transform.localPosition = new Vector3(transform.localPosition.x, transform.localPosition.y + transform.localScale.y / 2, transform.localPosition.z);
+        transform.localScale = new Vector3(transform.localScale.x, Mathf.Clamp(transform.localScale.y * 2, transform.localScale.y / 2, transform.localScale.y * 2), transform.localScale.z);
+        grounded = true;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -216,14 +238,28 @@ public class RunAgent : Agent {
         if (other.CompareTag("spikes"))
         {
             badJob.Invoke();
-            AddReward(-1f);
+            if (!grounded)
+            {
+                AddReward(-7f);
+            }
+            else
+            {
+                AddReward(-1f);
+            }
             Done();
         }
 
         if (other.CompareTag("pit"))
         {
             badJob.Invoke();
-            AddReward(-1f);
+            if (crouched)
+            {
+                AddReward(-7f);
+            }
+            else
+            {
+                AddReward(-1f);
+            }
             Done();
         }
 
@@ -232,7 +268,7 @@ public class RunAgent : Agent {
             if (crouched)
             {
                 badJob.Invoke();
-                AddReward(-0.1f);
+                AddReward(-1f);
                 Done();
             }
             else
@@ -257,6 +293,29 @@ public class RunAgent : Agent {
         if (collision.gameObject.CompareTag("ground"))
         {
             grounded = false;
+        }
+    }
+
+    private void Update()
+    {
+        /*
+        RaycastHit hit;
+
+        if (Physics.Raycast(rayStart.position, this.transform.forward, out hit, Mathf.Infinity, LayerMask.GetMask("Obstacle")))
+        {
+            if (hit.transform.gameObject.CompareTag("spikes"))
+            {
+                nextObstacle = spikes;
+            }
+            else if (hit.transform.gameObject.CompareTag("pit"))
+            {
+                nextObstacle = pit;
+            }
+        }
+        */
+        if (pit != null && spikes != null)
+        {
+
         }
     }
 
