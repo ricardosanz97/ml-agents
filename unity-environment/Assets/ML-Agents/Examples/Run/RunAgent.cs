@@ -52,7 +52,7 @@ public class RunAgent : Agent {
                 pitPos = GetPitPosition(RunAcademy.pitOffset);
                 objPos = GetObjectivePosition(RunAcademy.objectiveOffset);
             }
-            while (Mathf.Abs(pitPos.z - objPos.z) < 6.5f
+                while (Mathf.Abs(pitPos.z - objPos.z) < 6.5f
             || objPos.z < pitPos.z);
 
         }
@@ -63,19 +63,19 @@ public class RunAgent : Agent {
                 spikesPos = GetSpikesPosition(RunAcademy.spikesOffset);
                 objPos = GetObjectivePosition(RunAcademy.objectiveOffset);
             }
-            while (Mathf.Abs(spikesPos.z - objPos.z) < 10f
+            while (Mathf.Abs(spikesPos.z - objPos.z) < 8f
             || objPos.z < spikesPos.z);
         }
         else
         {
             do
             {
-                pitPos = GetPitPosition(RunAcademy.pitOffset);
                 spikesPos = GetSpikesPosition(RunAcademy.spikesOffset);
+                pitPos = GetPitPosition(RunAcademy.pitOffset);
                 objPos = GetObjectivePosition(RunAcademy.objectiveOffset);
             }
-            while (Mathf.Abs(pitPos.z - objPos.z) < 6.5f
-            || Mathf.Abs(spikesPos.z - objPos.z) < 10f
+            while (Mathf.Abs(pitPos.z - objPos.z) < 5f
+            || Mathf.Abs(spikesPos.z - objPos.z) < 8f
             || Mathf.Abs(pitPos.z - spikesPos.z) < 7.5f
             || objPos.z < spikesPos.z
             || objPos.z < pitPos.z);
@@ -122,6 +122,7 @@ public class RunAgent : Agent {
     */
     public override void CollectObservations()
     {
+
         Vector3 objectivePos = objective.transform.localPosition;
 
         float distObjective = objective.transform.localPosition.z - transform.localPosition.z;
@@ -131,34 +132,44 @@ public class RunAgent : Agent {
         //DISTANCE TO OBJECTIVE AND POSITION
         AddVectorObs(distObjective);
         AddVectorObs(objectivePos);
-         
         //NEXT OBJECT
-        //pit = 1
-        //spikes = 0
-        //nada = -1
-        if (RunAcademy.spikesOffset > 0 && RunAcademy.pitOffset > 0)
+        //pit = 1, spikes = 0, objective = -1
+
+        if ((distPit + pit.GetComponent<BoxCollider>().size.z / 2 + 
+        this.GetComponent<BoxCollider>().size.z/2) > 0 
+
+        && (distSpikes + spikes.GetComponent<BoxCollider>().size.z/2 + 
+        (this.GetComponent<BoxCollider>().size.z * 2) + this.GetComponent<BoxCollider>().size.z/2) > 0)
         {
-            AddVectorObs(distSpikes > distPit ? 1 : 0); //hay pit y spikes, devolvemos el mas cercano
+
             nextObstacle = distSpikes > distPit ? 1 : 0;
+            AddVectorObs(distSpikes > distPit ? 1 : 0); //hay pit y spikes, devolvemos el mas cercano
+
         }
-        else if (RunAcademy.spikesOffset > 0)
+        else if ((distPit + pit.GetComponent<BoxCollider>().size.z + 
+        this.GetComponent<BoxCollider>().size.z/2) > 0)
         {
-            AddVectorObs(0); //spikes mas cerca
-            nextObstacle = 0;
-        }
-        else if (RunAcademy.pitOffset > 0)
-        {
-            AddVectorObs(1); //pit mas cerca
+            //Debug.Log("pit siguiente");
             nextObstacle = 1;
+            AddVectorObs(1);
+        }
+        else if ((distSpikes + spikes.GetComponent<BoxCollider>().size.z + 
+        (this.GetComponent<BoxCollider>().size.z * 2) + this.GetComponent<BoxCollider>().size.z / 2) > 0)
+        {
+            //Debug.Log("spikes siguiente");
+            nextObstacle = 0;
+            AddVectorObs(0);
         }
         else
         {
+            //Debug.Log("objetivo más alante");
             AddVectorObs(-1); //no hay ni pit ni spikes
             nextObstacle = -1;
         }
 
         //DISTANCIAS
-        if (RunAcademy.spikesOffset > 0) //si hay algun pincho
+        if ((distSpikes + spikes.GetComponent<BoxCollider>().size.z +
+        (this.GetComponent<BoxCollider>().size.z * 2) + this.GetComponent<BoxCollider>().size.z / 2) > 0) //si hay algun pincho
         {
             AddVectorObs(distSpikes);
         }
@@ -166,7 +177,8 @@ public class RunAgent : Agent {
         {
             AddVectorObs(0);
         }
-        if (RunAcademy.pitOffset > 0) //si hay algun foso
+        if ((distPit + pit.GetComponent<BoxCollider>().size.z +
+        this.GetComponent<BoxCollider>().size.z/2) > 0) //si hay algun foso
         {
             AddVectorObs(distPit);
         }
@@ -240,11 +252,11 @@ public class RunAgent : Agent {
             badJob.Invoke();
             if (!grounded)
             {
-                AddReward(-7f);
+                AddReward(-8f); //era -7
             }
             else
             {
-                AddReward(-1f);
+                AddReward(-1); //era -1
             }
             Done();
         }
@@ -254,11 +266,11 @@ public class RunAgent : Agent {
             badJob.Invoke();
             if (crouched)
             {
-                AddReward(-7f);
+                AddReward(-8f); //era -7
             }
             else
             {
-                AddReward(-1f);
+                AddReward(-1f); //era -1
             }
             Done();
         }
@@ -274,7 +286,7 @@ public class RunAgent : Agent {
             else
             {
                 goodJob.Invoke();
-                AddReward(60f);
+                AddReward(70f);
                 Done();
             }
         }
@@ -293,29 +305,6 @@ public class RunAgent : Agent {
         if (collision.gameObject.CompareTag("ground"))
         {
             grounded = false;
-        }
-    }
-
-    private void Update()
-    {
-        /*
-        RaycastHit hit;
-
-        if (Physics.Raycast(rayStart.position, this.transform.forward, out hit, Mathf.Infinity, LayerMask.GetMask("Obstacle")))
-        {
-            if (hit.transform.gameObject.CompareTag("spikes"))
-            {
-                nextObstacle = spikes;
-            }
-            else if (hit.transform.gameObject.CompareTag("pit"))
-            {
-                nextObstacle = pit;
-            }
-        }
-        */
-        if (pit != null && spikes != null)
-        {
-
         }
     }
 

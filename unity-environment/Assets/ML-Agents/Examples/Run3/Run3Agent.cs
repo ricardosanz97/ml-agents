@@ -95,7 +95,7 @@ public class Run3Agent : Agent {
             badJob.Invoke();
             if (!grounded)
             {
-                AddReward(-15f);
+                AddReward(-8f);
             }
             else
             {
@@ -112,7 +112,7 @@ public class Run3Agent : Agent {
             badJob.Invoke();
             if (crouched)
             {
-                AddReward(-5f);
+                AddReward(-8f);
             }
             else
             {
@@ -134,7 +134,7 @@ public class Run3Agent : Agent {
         if (other.CompareTag("goodJob"))
         {
             goodJob.Invoke();
-            AddReward(60f);
+            AddReward(50f);
             Destroy(nextObstacle);
             spawner.GetComponent<SpawnerController>().SpawnObstacle();
         }

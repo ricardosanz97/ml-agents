@@ -24,6 +24,9 @@ TagManager:
   - orangeGoal
   - Objective
   - spikes
+  - walkableSurface
+  - goodJob
+  - detectorRun
   layers:
   - Default
   - TransparentFX
@@ -39,7 +42,7 @@ TagManager:
   - goalie
   - strikerWall
   - striker
-  - 
+  - Obstacle
   - 
   - 
   - 

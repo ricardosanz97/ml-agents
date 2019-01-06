@@ -1,6 +1,6 @@
 {
     "measure" : "reward",
-    "thresholds" : [70,70,70,65,65,65,65,65,65,65,65],
+    "thresholds" : [70,70,70,70,70,70,65,65,65,65],
     "min_lesson_length" : 1,
     "signal_smoothing" : true,
     "parameters" :
