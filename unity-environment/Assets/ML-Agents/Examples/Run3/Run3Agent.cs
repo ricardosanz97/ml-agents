@@ -36,6 +36,7 @@ public class Run3Agent : Agent {
 
     public override void CollectObservations()
     {
+        //AddVectorObs(transform.localPosition);
         AddVectorObs(nextObstacle.transform.localPosition);
         AddVectorObs(nextObstacle.transform.localPosition.z - transform.localPosition.z);
         AddVectorObs(grounded ? 1 : 0);
@@ -61,7 +62,9 @@ public class Run3Agent : Agent {
             {
                 if (crouched && grounded) LiftUp();
             }
-
+            if ((int)vectorAction[0] == 3) {
+                return;
+            }
         }
     }
 
@@ -112,11 +115,11 @@ public class Run3Agent : Agent {
             badJob.Invoke();
             if (crouched)
             {
-                AddReward(-8f);
+                AddReward(-20f);
             }
             else
             {
-                AddReward(-1f);
+                AddReward(-5f);
             }
             Destroy(nextObstacle);
             spawner.GetComponent<SpawnerController>().SpawnObstacle();
@@ -134,7 +137,7 @@ public class Run3Agent : Agent {
         if (other.CompareTag("goodJob"))
         {
             goodJob.Invoke();
-            AddReward(50f);
+            AddReward(40f);
             Destroy(nextObstacle);
             spawner.GetComponent<SpawnerController>().SpawnObstacle();
         }
